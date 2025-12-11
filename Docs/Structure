@@ -1,0 +1,38 @@
+CTE-Project/
+│
+├── docker-compose.yml           # Master orchestration file (App + Redis + Kafka)
+├── loadtest.js                  # k6 Load Testing script (Performance Benchmark)
+├── README.md                    #  Main Documentation
+│
+├── backend/                     #  Node.js WebSocket & API Gateway
+│   ├── Dockerfile               # Container instructions for Backend
+│   ├── jest.config.js           # Jest Testing Configuration
+│   ├── package.json             # Backend Dependencies
+│   ├── tsconfig.json            # TypeScript Compiler Config
+│   ├── tsconfig.test.json       # Special Config for Test Files
+│   │
+│   └── src/                     # Source Code
+│       ├── server.ts            #  Entry Point (Express + WebSocket Server)
+│       ├── services/            # Business Logic Layer
+│       │   └── DocumentSession.ts  # Core OT Logic, Redis/Kafka Sync
+│       │
+│       └── tests/               #  Unit Testing Layer
+│           └── document.test.ts    # Jest Tests for Conflict Resolution
+│
+└── frontend/                    #  React + Vite Client Application
+    ├── Dockerfile               # Container instructions for Frontend
+    ├── package.json             # Frontend Dependencies
+    ├── playwright.config.ts     # Playwright E2E Testing Config
+    ├── vite.config.ts           # Vite Bundler Config (Dev Server settings)
+    │
+    ├── public/                  # Static Assets
+    │   └── vite.svg
+    │
+    ├── src/                     # Source Code
+    │   ├── App.tsx              #  Main UI Logic (Editor, Chat, Share, History)
+    │   ├── main.tsx             # React DOM Entry Point
+    │   ├── index.css            # Global Styles (Remote Cursors, Dark Mode)
+    │   └── App.css              # Component Styles
+    │
+    └── tests/                   #  End-to-End Testing Layer
+        └── collaboration.spec.ts   # Playwright Test Scenarios

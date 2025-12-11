@@ -1,0 +1,22 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* 🟢 KEEP SPACES */
+.ql-editor {
+  white-space: pre-wrap !important;
+}
+
+/* 🟢 OPTIONAL: Make cursor flag pop out more */
+.ql-cursor-flag {
+  font-weight: bold;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}

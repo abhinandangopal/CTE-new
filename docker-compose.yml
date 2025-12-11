@@ -1,0 +1,32 @@
+version: '3'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: collab-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2182:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: collab-kafka
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Listen on port 9093 inside and outside
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9093
+      # Announce 127.0.0.1 to your laptop so Node.js can find it
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  redis:
+    image: redis:alpine
+    container_name: collab-redis
+    ports:
+      - "6380:6379"
