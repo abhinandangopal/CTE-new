@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # 1. THE REVERSE PROXY (Handles HTTPS & Routing)
+  caddy:
+    image: caddy:2.7
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+
+  # 2. FRONTEND
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+
+  # 3. BACKEND
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKER=kafka:9092
+      # CHANGE THIS TO YOUR ACTUAL DOMAIN LATER
+      - CLIENT_URL=https://your-domain-name.com 
+      - PORT=8081
+    depends_on:
+      - redis
+      - kafka
+
+  # 4. REDIS
+  redis:
+    image: redis:alpine
+    restart: always
+
+  # 5. KAFKA (Simplified setup for ease)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+volumes:
+  caddy_data:
+  caddy_config:

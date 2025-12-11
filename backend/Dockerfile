@@ -1,20 +1,30 @@
-# Use Node.js Linux image
-FROM node:18-alpine
+# --- Stage 1: Build ---
+FROM node:18-alpine as builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files first (for caching)
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
 
-# Copy source code
 COPY . .
 
-# Expose the API Port
+# Compile TypeScript to JavaScript
+RUN npm run build
+
+# --- Stage 2: Run ---
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --production
+
+# Copy built JS files from Stage 1
+COPY --from=builder /app/dist ./dist
+# Copy .env file (We will actually handle env vars via Docker, but this is a backup)
+COPY .env ./
+
 EXPOSE 8081
 
-# Start the server using the script we set up
-CMD ["npm", "run", "dev"]
+# Start the compiled javascript
+CMD ["node", "dist/server.js"]

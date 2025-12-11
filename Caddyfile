@@ -1,0 +1,21 @@
+# Replace this with your actual domain name!
+your-domain-name.com {
+    
+    # Send API requests to the backend container
+    handle /api/* {
+        reverse_proxy backend:8081
+    }
+
+    # Send WebSocket requests to the backend container
+    # (Websockets usually start with /ws or the connection upgrade)
+    @websockets {
+        header Connection *Upgrade*
+        header Upgrade    websocket
+    }
+    reverse_proxy @websockets backend:8081
+
+    # Send everything else to the frontend container
+    handle {
+        reverse_proxy frontend:80
+    }
+}

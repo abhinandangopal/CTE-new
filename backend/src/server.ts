@@ -19,16 +19,23 @@ if (result.error) {
     console.log("✅ .env file loaded successfully.");
 }
 
+// 🟢 CONFIG
+const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6380';
+const KAFKA_BROKER = process.env.KAFKA_BROKER || '127.0.0.1:9093';
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
 const app = express();
-app.use(cors());
+
+// 🟢 CORS CONFIGURATION
+app.use(cors({
+    origin: CLIENT_URL,
+    credentials: true // Good practice if you send cookies later
+}));
+
 app.use(express.json());
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-
-// 🟢 CONFIG
-const REDIS_URL = process.env.REDIS_URL || 'redis://127.0.0.1:6380';
-const KAFKA_BROKER = process.env.KAFKA_BROKER || '127.0.0.1:9093';
 
 // 🔍 DEBUG: Check if credentials exist (Don't print the real password)
 const emailUser = process.env.EMAIL_USER;
@@ -62,7 +69,7 @@ transporter.verify(function (error, success) {
 });
 
 console.log(`🔌 Config: Redis at ${REDIS_URL}`);
-const redis = new Redis(REDIS_URL); 
+const redis = new Redis(REDIS_URL);
 
 console.log(`🔌 Config: Kafka at ${KAFKA_BROKER}`);
 const kafka = new Kafka({ clientId: 'collab-app', brokers: [KAFKA_BROKER] });
@@ -96,16 +103,16 @@ app.post('/api/signup', async (req, res) => {
     const useStrict = strictProviders.includes(domain);
 
     try {
-        const val = await validate({ 
-            email, 
+        const val = await validate({
+            email,
             sender: 'test@example.com',
             validateRegex: true,
             validateMx: true,
             validateTypo: true,
             validateDisposable: true,
-            validateSMTP: useStrict 
-        }); 
-        
+            validateSMTP: useStrict
+        });
+
         if (!val.valid) {
             const reason = val.reason;
             let errorMessage = "Invalid email address.";
@@ -159,8 +166,9 @@ app.post('/api/forgot-password', async (req, res) => {
     const redisKey = `reset_token:${token}`;
     await redis.setex(redisKey, 900, email);
 
-    const resetLink = `http://localhost:5173/?resetToken=${token}`;
-    
+    // FIXED: Added backticks for template literal
+    const resetLink = `${CLIENT_URL}/?resetToken=${token}`;
+
     const mailOptions = {
         from: 'CollabApp Support <noreply@collabapp.com>',
         to: email,
@@ -215,14 +223,14 @@ app.post('/api/doc/:docId/tabs', async (req, res) => { const { docId, tabName } 
     try {
         await producer.connect();
         console.log("✅ Kafka Connected!");
-        
+
         wss.on('connection', async (ws, req) => {
             const urlParams = new URLSearchParams(req.url?.split('?')[1]);
             const docId = urlParams.get('docId');
             const tabId = urlParams.get('tabId');
             const userId = urlParams.get('userId');
             if (!docId || !userId || !tabId) { ws.close(); return; }
-            
+
             const owner = await redis.get(`doc_owner:${docId}`);
             let role = await redis.hget(`doc_acl:${docId}`, userId);
             const linkSetting = await redis.hget(`doc_settings:${docId}`, 'link_access') || 'none';
